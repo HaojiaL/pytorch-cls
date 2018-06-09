@@ -53,7 +53,7 @@ testset = torchvision.datasets.ImageFolder(os.path.join(data_dir, 'val_folder'),
 testloader = torch.utils.data.DataLoader(testset, batch_size=16, shuffle=True, num_workers=4)
 
 
-# classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
+# classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'))
 classes = trainset.classes
 
 if args.resume:
@@ -121,7 +121,7 @@ def test(epoch):
             progress_bar(batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)'
                          % (test_loss / (batch_idx + 1), 100. * correct / total, correct, total))
 
-    acc = 100.*correct/total 
+    acc = 100.*correct/total
     if acc > best_acc:
         print('Saving..')
         state = {
