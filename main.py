@@ -23,19 +23,38 @@ device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0
 start_epoch = 0
 
+
+def weights_init(m):
+    if isinstance(m, nn.Conv2d):
+        # nn.init.constant_(m.weight.data, 0)
+        nn.init.xavier_normal_(m.weight.data)
+        # print(m.weight)
+
+
 print('==> Preparing data..')
 transform_train = transforms.Compose([
     transforms.Resize((100, 100)),
-    transforms.RandomCrop(100, padding=5),
+    transforms.RandomCrop(100, padding=4),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize([0.4717, 0.4717, 0.4717], [0.2189, 0.2189, 0.2189])
 ])
+
+transform_train2 = transforms.Compose([
+    transforms.Resize((100,100)),
+    transforms.RandomCrop(100, padding=4),
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomRotation(10),
+    transforms.ColorJitter(0.5, 0.5, 0.5, 0.3),
+    transforms.RandomAffine(10),
+    transforms.ToTensor(),
+    transforms.Normalize([0.4755, 0.4755, 0.4755], [0.2103, 0.2103, 0.2103])
+    ])
 
 transform_test = transforms.Compose([
     transforms.Resize((100, 100)),
     transforms.ToTensor(),
-    transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+    transforms.Normalize([0.4293, 0.4099, 0.3822], [0.2469, 0.2528, 0.2525])
 ])
 
 # trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
@@ -50,7 +69,12 @@ trainset = torchvision.datasets.ImageFolder(os.path.join(data_dir, 'train_folder
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=64, shuffle=True, num_workers=4)
 
 testset = torchvision.datasets.ImageFolder(os.path.join(data_dir, 'val_folder'), transform=transform_test)
-testloader = torch.utils.data.DataLoader(testset, batch_size=16, shuffle=True, num_workers=4)
+testloader = torch.utils.data.DataLoader(testset, batch_size=16, shuffle=False, num_workers=4)
+
+data_dir2 = '/media/disk4/share/DataSet/Driver_Drowsiness/ypb_eye_dataset/'
+
+trainset2 = torchvision.datasets.ImageFolder(os.path.join(data_dir2, 'dataset_B_FacialImages'), transform=transform_train2)
+trainloader2 = torch.utils.data.DataLoader(trainset2, batch_size=32, shuffle=True, num_workers=4)
 
 
 # classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck'))
@@ -67,6 +91,8 @@ if args.resume:
 else:
     print('==> Building model..')
     net = MyNet()
+    net.apply(weights_init)
+
 
 net = net.to(device)
 if device == 'cuda':
@@ -74,7 +100,8 @@ if device == 'cuda':
     cudnn.benchmark = True
 
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+# optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+optimizer = optim.Adam(net.parameters(), lr=args.lr, weight_decay=5e-4)
 
 
 def train(epoch):
@@ -134,6 +161,8 @@ def test(epoch):
             os.mkdir('checkpoint')
         torch.save(state, './checkpoint/ckpt.t7')
         best_acc = acc
+
+
 
 for epoch in range(start_epoch, start_epoch+200):
     train(epoch)
